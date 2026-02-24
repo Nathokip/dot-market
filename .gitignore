@@ -1,0 +1,31 @@
+# Environments
+.venv/
+venv/
+env/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Machine Learning Data & Models (Do not commit large files)
+*.csv
+*.dat
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.pkl
+data/
+models/
+
+# Environment Variables / Secrets
+.env
+
+# IDEs and OS
+.vscode/
+.idea/
+*.swp
