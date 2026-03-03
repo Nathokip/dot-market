@@ -33,12 +33,14 @@ git clone https://github.com/Nathokip/dot-market.git
 cd dot-market
 ```
 ## Set up the virtual environment
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
-
+```
 ## Install dependencies
+```bash
 cd backend
 pip install -r requirements.txt
-
+```
 
 
