@@ -28,9 +28,10 @@ Before you begin, ensure you have Python 3.8+ installed
 
 
 ## Clone the repository 
+```bash
 git clone https://github.com/Nathokip/dot-market.git
 cd dot-market
-
+```
 ## Set up the virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
