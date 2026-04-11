@@ -35,8 +35,6 @@ export interface BatchQuote {
 async function callMarketData(params: Record<string, string>) {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   const queryString = new URLSearchParams(params).toString();
   const url = `${supabaseUrl}/functions/v1/market-data?${queryString}`;
