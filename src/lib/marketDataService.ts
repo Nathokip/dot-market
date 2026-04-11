@@ -1,4 +1,3 @@
-import { supabase } from "@/integrations/supabase/client";
 import { topStocks, generateCandlestickData } from "@/lib/mockData";
 
 export interface StockQuote {
