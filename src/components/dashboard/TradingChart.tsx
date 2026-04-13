@@ -83,21 +83,21 @@ const TradingChart = () => {
       height: 400,
       layout: {
         background: { color: "transparent" },
-        textColor: "hsl(215, 20%, 55%)",
+        textColor: "#7a8599",
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: "hsl(225, 20%, 15%)" },
-        horzLines: { color: "hsl(225, 20%, 15%)" },
+        vertLines: { color: "#1f2937" },
+        horzLines: { color: "#1f2937" },
       },
       crosshair: {
         mode: 0,
       },
       rightPriceScale: {
-        borderColor: "hsl(225, 20%, 18%)",
+        borderColor: "#2d3748",
       },
       timeScale: {
-        borderColor: "hsl(225, 20%, 18%)",
+        borderColor: "#2d3748",
         timeVisible: activeFilter === "1D",
       },
     });
@@ -106,12 +106,12 @@ const TradingChart = () => {
 
     // Candlestick series
     const candleSeries = chart.addCandlestickSeries({
-      upColor: "hsl(145, 70%, 50%)",
-      downColor: "hsl(0, 100%, 65%)",
-      borderUpColor: "hsl(145, 70%, 50%)",
-      borderDownColor: "hsl(0, 100%, 65%)",
-      wickUpColor: "hsl(145, 70%, 50%)",
-      wickDownColor: "hsl(0, 100%, 65%)",
+      upColor: "#26c676",
+      downColor: "#ff4b4b",
+      borderUpColor: "#26c676",
+      borderDownColor: "#ff4b4b",
+      wickUpColor: "#26c676",
+      wickDownColor: "#ff4b4b",
     });
     candleSeries.setData(chartData.candles as any);
 
