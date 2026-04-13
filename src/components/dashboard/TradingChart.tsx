@@ -85,7 +85,7 @@ const TradingChart = () => {
           : "rgba(255, 75, 75, 0.15)",
     }));
 
-    return { candles, predictions, volumes };
+    return { candles: uniqueCandles, predictions, volumes };
   }, [dailyData, intradayData, activeFilter]);
 
   const isLoading = dailyLoading && intradayLoading;
