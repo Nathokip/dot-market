@@ -105,7 +105,7 @@ const TradingChart = () => {
     chartRef.current = chart;
 
     // Candlestick series
-    const candleSeries = chart.addSeries(CandlestickSeries, {
+    const candleSeries = chart.addCandlestickSeries({
       upColor: "hsl(145, 70%, 50%)",
       downColor: "hsl(0, 100%, 65%)",
       borderUpColor: "hsl(145, 70%, 50%)",
@@ -116,16 +116,16 @@ const TradingChart = () => {
     candleSeries.setData(chartData.candles as any);
 
     // AI Prediction line
-    const predictionSeries = chart.addSeries(LineSeries, {
+    const predictionSeries = chart.addLineSeries({
       color: "hsl(195, 100%, 50%)",
       lineWidth: 2,
-      lineStyle: 2, // dashed
+      lineStyle: 2,
       crosshairMarkerVisible: false,
     });
     predictionSeries.setData(chartData.predictions as any);
 
     // Volume histogram
-    const volumeSeries = chart.addSeries(HistogramSeries, {
+    const volumeSeries = chart.addHistogramSeries({
       priceFormat: { type: "volume" },
       priceScaleId: "volume",
     });
