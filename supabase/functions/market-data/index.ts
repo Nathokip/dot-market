@@ -5,6 +5,36 @@ const corsHeaders = {
 
 const FINNHUB_BASE = 'https://finnhub.io/api/v1';
 
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+// Yahoo Finance chart API (free, no key needed)
+async function fetchYahooCandles(symbol: string, range: string, interval: string) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}&includePrePost=false`;
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0' },
+  });
+  const data = await res.json();
+  const result = data?.chart?.result?.[0];
+  if (!result || !result.timestamp) return null;
+
+  const quotes = result.indicators.quote[0];
+  return result.timestamp.map((ts: number, i: number) => ({
+    date: interval === '1d'
+      ? new Date(ts * 1000).toISOString().slice(0, 10)
+      : new Date(ts * 1000).toISOString(),
+    open: quotes.open[i],
+    high: quotes.high[i],
+    low: quotes.low[i],
+    close: quotes.close[i],
+    volume: quotes.volume[i],
+  })).filter((c: any) => c.open != null && c.close != null);
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -12,10 +42,7 @@ Deno.serve(async (req) => {
 
   const apiKey = Deno.env.get('FINNHUB_API_KEY');
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'FINNHUB_API_KEY not configured' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: 'FINNHUB_API_KEY not configured' }, 500);
   }
 
   try {
@@ -40,55 +67,26 @@ Deno.serve(async (req) => {
             previousClose: q.pc,
             change: q.d,
             changePercent: q.dp,
-            volume: 0, // quote endpoint doesn't include volume
+            volume: 0,
           },
           source: 'finnhub',
         });
       }
 
       case 'daily': {
-        const now = Math.floor(Date.now() / 1000);
-        const from = now - 365 * 86400;
-        const candleUrl = `${FINNHUB_BASE}/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${now}&token=${apiKey}`;
-        console.log('Fetching candle URL:', candleUrl.replace(apiKey, '***'));
-        const res = await fetch(candleUrl);
-        const rawText = await res.text();
-        console.log('Finnhub candle raw response:', rawText.slice(0, 300));
-        let data;
-        try { data = JSON.parse(rawText); } catch { return jsonResponse({ error: 'Invalid response from Finnhub', data: null, fallback: true }); }
-        if (data.s !== 'ok' || !data.t) {
+        const candles = await fetchYahooCandles(symbol, '1y', '1d');
+        if (!candles || candles.length === 0) {
           return jsonResponse({ error: 'No daily data available', data: null, fallback: true });
         }
-        const candles = data.t.map((timestamp: number, i: number) => ({
-          date: new Date(timestamp * 1000).toISOString().slice(0, 10),
-          open: data.o[i],
-          high: data.h[i],
-          low: data.l[i],
-          close: data.c[i],
-          volume: data.v[i],
-        }));
-        return jsonResponse({ data: candles, source: 'finnhub' });
+        return jsonResponse({ data: candles, source: 'yahoo' });
       }
 
       case 'intraday': {
-        const now = Math.floor(Date.now() / 1000);
-        const from = now - 86400; // last 24h
-        const res = await fetch(
-          `${FINNHUB_BASE}/stock/candle?symbol=${symbol}&resolution=5&from=${from}&to=${now}&token=${apiKey}`
-        );
-        const data = await res.json();
-        if (data.s !== 'ok' || !data.t) {
+        const candles = await fetchYahooCandles(symbol, '1d', '5m');
+        if (!candles || candles.length === 0) {
           return jsonResponse({ error: 'No intraday data available', data: null, fallback: true });
         }
-        const candles = data.t.map((timestamp: number, i: number) => ({
-          date: new Date(timestamp * 1000).toISOString(),
-          open: data.o[i],
-          high: data.h[i],
-          low: data.l[i],
-          close: data.c[i],
-          volume: data.v[i],
-        }));
-        return jsonResponse({ data: candles, source: 'finnhub' });
+        return jsonResponse({ data: candles, source: 'yahoo' });
       }
 
       case 'batch': {
@@ -121,16 +119,6 @@ Deno.serve(async (req) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Market data error:', message);
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: message }, 500);
   }
 });
-
-function jsonResponse(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
-}
