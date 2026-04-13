@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { createChart, CandlestickSeries, LineSeries, HistogramSeries, type IChartApi } from "lightweight-charts";
+import { createChart, type IChartApi } from "lightweight-charts";
 import { useDailyCandles, useIntradayCandles } from "@/hooks/useMarketData";
 import { generateCandlestickData } from "@/lib/mockData";
 import { Skeleton } from "@/components/ui/skeleton";
