@@ -37,9 +37,24 @@ const TradingChart = () => {
     }
 
     const candles = sourceData.map((d: any) => {
-      const time = d.date?.includes("T")
-        ? Math.floor(new Date(d.date).getTime() / 1000)
-        : d.date; // YYYY-MM-DD string works directly
+      let time: string;
+      if (d.date && /^\d{4}-\d{2}-\d{2}$/.test(d.date)) {
+        // Already yyyy-mm-dd
+        time = d.date;
+      } else if (d.fullDate) {
+        // Mock data with fullDate
+        const dt = new Date(d.fullDate);
+        time = dt.toISOString().slice(0, 10);
+      } else if (d.date?.includes("T")) {
+        // Intraday datetime - use unix timestamp
+        time = String(Math.floor(new Date(d.date).getTime() / 1000));
+      } else {
+        // Fallback: try to parse, or generate sequential date
+        const dt = new Date(d.date);
+        time = isNaN(dt.getTime())
+          ? new Date(Date.now()).toISOString().slice(0, 10)
+          : dt.toISOString().slice(0, 10);
+      }
       return {
         time,
         open: d.open,
