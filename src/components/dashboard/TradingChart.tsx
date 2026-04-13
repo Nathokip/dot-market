@@ -117,7 +117,7 @@ const TradingChart = () => {
 
     // AI Prediction line
     const predictionSeries = chart.addLineSeries({
-      color: "hsl(195, 100%, 50%)",
+      color: "#00bfff",
       lineWidth: 2,
       lineStyle: 2,
       crosshairMarkerVisible: false,
