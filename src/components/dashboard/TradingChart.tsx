@@ -37,9 +37,24 @@ const TradingChart = () => {
     }
 
     const candles = sourceData.map((d: any) => {
-      const time = d.date?.includes("T")
-        ? Math.floor(new Date(d.date).getTime() / 1000)
-        : d.date; // YYYY-MM-DD string works directly
+      let time: string;
+      if (d.date && /^\d{4}-\d{2}-\d{2}$/.test(d.date)) {
+        // Already yyyy-mm-dd
+        time = d.date;
+      } else if (d.fullDate) {
+        // Mock data with fullDate
+        const dt = new Date(d.fullDate);
+        time = dt.toISOString().slice(0, 10);
+      } else if (d.date?.includes("T")) {
+        // Intraday datetime - use unix timestamp
+        time = String(Math.floor(new Date(d.date).getTime() / 1000));
+      } else {
+        // Fallback: try to parse, or generate sequential date
+        const dt = new Date(d.date);
+        time = isNaN(dt.getTime())
+          ? new Date(Date.now()).toISOString().slice(0, 10)
+          : dt.toISOString().slice(0, 10);
+      }
       return {
         time,
         open: d.open,
@@ -83,21 +98,21 @@ const TradingChart = () => {
       height: 400,
       layout: {
         background: { color: "transparent" },
-        textColor: "hsl(215, 20%, 55%)",
+        textColor: "#7a8599",
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: "hsl(225, 20%, 15%)" },
-        horzLines: { color: "hsl(225, 20%, 15%)" },
+        vertLines: { color: "#1f2937" },
+        horzLines: { color: "#1f2937" },
       },
       crosshair: {
         mode: 0,
       },
       rightPriceScale: {
-        borderColor: "hsl(225, 20%, 18%)",
+        borderColor: "#2d3748",
       },
       timeScale: {
-        borderColor: "hsl(225, 20%, 18%)",
+        borderColor: "#2d3748",
         timeVisible: activeFilter === "1D",
       },
     });
@@ -106,18 +121,18 @@ const TradingChart = () => {
 
     // Candlestick series
     const candleSeries = chart.addCandlestickSeries({
-      upColor: "hsl(145, 70%, 50%)",
-      downColor: "hsl(0, 100%, 65%)",
-      borderUpColor: "hsl(145, 70%, 50%)",
-      borderDownColor: "hsl(0, 100%, 65%)",
-      wickUpColor: "hsl(145, 70%, 50%)",
-      wickDownColor: "hsl(0, 100%, 65%)",
+      upColor: "#26c676",
+      downColor: "#ff4b4b",
+      borderUpColor: "#26c676",
+      borderDownColor: "#ff4b4b",
+      wickUpColor: "#26c676",
+      wickDownColor: "#ff4b4b",
     });
     candleSeries.setData(chartData.candles as any);
 
     // AI Prediction line
     const predictionSeries = chart.addLineSeries({
-      color: "hsl(195, 100%, 50%)",
+      color: "#00bfff",
       lineWidth: 2,
       lineStyle: 2,
       crosshairMarkerVisible: false,
