@@ -79,14 +79,27 @@ app.post("/api/predictions", async (req: Request, res: Response) => {
       }
     ).then((r) => r.json());
 
+    // Ensure stock exists or create it
+    const stock = await prisma.stock.upsert({
+      where: { symbol: symbol.toUpperCase() },
+      update: {},
+      create: {
+        symbol: symbol.toUpperCase(),
+        name: symbol.toUpperCase(),
+        price: 0,
+      },
+    });
+
     // Store prediction in database
+    const predictionData = prediction as { predicted_price?: number; confidence?: number; timeframe?: string };
     const storedPrediction = await prisma.prediction.create({
       data: {
         symbol: symbol.toUpperCase(),
         model,
-        predictedPrice: prediction.predicted_price,
-        confidence: prediction.confidence,
-        timeframe: prediction.timeframe || "1d",
+        predictedPrice: predictionData.predicted_price || 0,
+        confidence: predictionData.confidence || 0,
+        timeframe: predictionData.timeframe || "1d",
+        stock: { connect: { id: stock.id } },
       },
     });
 
