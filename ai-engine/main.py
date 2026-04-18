@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+import yfinance as yf
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -110,30 +111,29 @@ def load_or_create_model(model_type: str, input_shape: int):
     models_cache[model_type] = model
     return model
 
-def generate_synthetic_data(symbol: str, days: int = 1000) -> pd.DataFrame:
-    """Generate synthetic stock data for demo purposes"""
-    dates = pd.date_range(end=datetime.now(), periods=days, freq='D')
+def fetch_stock_data(symbol: str, days: int = 365) -> pd.DataFrame:
+    """Fetch real stock data from Yahoo Finance"""
+    try:
+        ticker = yf.Ticker(symbol)
+        df = ticker.history(period=f"{days}d")
+        
+        if df.empty:
+            raise ValueError(f"No data found for symbol {symbol}")
+        
+        df = df.reset_index()
+        df['date'] = pd.to_datetime(df['Date'])
+        
+        df['close'] = df['Close']
+        df['sma_20'] = df['close'].rolling(20).mean()
+        df['sma_50'] = df['close'].rolling(50).mean()
+        df['rsi'] = calculate_rsi(df['close'], 14)
+        df['macd'], df['signal'] = calculate_macd(df['close'])
+        
+        return df.dropna()
     
-    # Random walk with drift
-    np.random.seed(42 + hash(symbol)) % 2**32
-    prices = 100 + np.cumsum(np.random.randn(days) * 2)
-    
-    df = pd.DataFrame({
-        'date': dates,
-        'open': prices + np.random.randn(days),
-        'high': prices + np.random.randn(days) * 2,
-        'low': prices - np.random.randn(days) * 2,
-        'close': prices,
-        'volume': np.random.randint(1000000, 100000000, days)
-    })
-    
-    # Add technical indicators
-    df['sma_20'] = df['close'].rolling(20).mean()
-    df['sma_50'] = df['close'].rolling(50).mean()
-    df['rsi'] = calculate_rsi(df['close'], 14)
-    df['macd'], df['signal'] = calculate_macd(df['close'])
-    
-    return df.dropna()
+    except Exception as e:
+        logger.error(f"Error fetching data for {symbol}: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to fetch data for {symbol}: {str(e)}")
 
 def calculate_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
     """Calculate Relative Strength Index"""
@@ -179,7 +179,7 @@ async def predict_price(request: PredictionRequest):
         logger.info(f"Predicting {request.symbol} using {request.model}")
         
         # Get data
-        df = generate_synthetic_data(request.symbol, request.historical_days)
+        df = fetch_stock_data(request.symbol, request.historical_days)
         
         # Prepare features
         X = prepare_features(df)
@@ -267,7 +267,7 @@ async def backtest_strategy(request: BacktestRequest):
         logger.info(f"Backtesting {request.symbol} with {request.strategy}")
         
         # Get historical data
-        df = generate_synthetic_data(request.symbol)
+        df = fetch_stock_data(request.symbol)
         
         # Apply strategy (simplified)
         signals = np.zeros(len(df))
