@@ -52,6 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null);
       }
       setIsLoading(false);
+    }).catch((error) => {
+      console.error("Session check failed:", error);
+      if (isMounted) setIsLoading(false);
     });
 
     const {
