@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { hasSupabaseAuthConfig } from "@/lib/env";
+import { getSiteUrl, hasSupabaseAuthConfig } from "@/lib/env";
 import { toast } from "@/components/ui/sonner";
 
 const Register = () => {
@@ -31,6 +31,7 @@ const Register = () => {
       email,
       password,
       options: {
+        emailRedirectTo: getSiteUrl(),
         data: {
           first_name: firstName,
           last_name: lastName,

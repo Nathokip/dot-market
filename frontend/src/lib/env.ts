@@ -40,3 +40,16 @@ export function getSupabasePublishableKey(): string {
 export function hasSupabaseAuthConfig(): boolean {
   return Boolean(getSupabaseUrl() && getSupabasePublishableKey());
 }
+
+export function getSiteUrl(): string {
+  const configuredUrl = import.meta.env.VITE_SITE_URL;
+  if (configuredUrl) {
+    return normalizeUrl(configuredUrl);
+  }
+
+  if (typeof window !== "undefined") {
+    return normalizeUrl(window.location.origin);
+  }
+
+  return "http://localhost:3000";
+}
