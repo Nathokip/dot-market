@@ -44,7 +44,7 @@ export interface BatchQuote {
 async function fetchFromBackend(params: Record<string, string>): Promise<any> {
   const backendApi = getApiBaseUrl();
   const queryString = new URLSearchParams(params).toString();
-  const url = `${backendApi}/yahoo/${params.endpoint}?${queryString}`;
+  const url = `${backendApi}/api/yahoo/${params.endpoint}?${queryString}`;
   
   const response = await fetch(url);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -115,7 +115,7 @@ export async function fetchBatchQuotes(symbols: string[]): Promise<BatchQuote[]>
     
     try {
       // Try to get real data from proxy
-      const response = await fetch(`${backendApi}/yahoo/chart?symbol=${symbolUpper}&range=5d`);
+      const response = await fetch(`${backendApi}/api/yahoo/chart?symbol=${symbolUpper}&range=5d`);
       if (response.ok) {
         const data = await response.json();
         const meta = data?.chart?.result?.[0]?.meta;

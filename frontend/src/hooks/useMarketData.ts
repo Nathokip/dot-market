@@ -442,7 +442,7 @@ export function useSystemStatus() {
         fetch(`${apiBaseUrl}/health`, { method: 'GET' })
           .then(r => r.ok)
           .catch(() => false),
-        fetch(`${apiBaseUrl}/models`)
+        fetch(`${apiBaseUrl}/api/models`)
           .then(r => r.ok)
           .catch(() => false),
       ]);

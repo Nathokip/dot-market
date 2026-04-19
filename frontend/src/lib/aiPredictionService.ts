@@ -69,7 +69,7 @@ export interface ModelsResponse {
 class AIPredictionService {
   async predict(request: PredictionRequest): Promise<PredictionResponse> {
     try {
-      const response = await fetch(`${getApiBaseUrl()}/predict`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request),
@@ -95,7 +95,7 @@ class AIPredictionService {
         ? JSON.stringify({ symbol: symbolText })
         : JSON.stringify({ text: symbolText });
       
-      const response = await fetch(`${getApiBaseUrl()}/sentiment`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/sentiment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body,
@@ -131,7 +131,7 @@ class AIPredictionService {
   }
 
   async runBacktest(request: BacktestRequest): Promise<BacktestResponse> {
-    const response = await fetch(`${getApiBaseUrl()}/backtest`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/backtest`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
