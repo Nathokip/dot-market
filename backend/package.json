@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Backend API and services for Dot Market AI Pro",
   "private": true,
+  "packageManager": "npm@10",
   "type": "module",
   "main": "dist/server.js",
   "scripts": {
