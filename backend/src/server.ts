@@ -39,6 +39,27 @@ const FALLBACK_PRICES: Record<string, number> = {
   AAPL: 172.50, MSFT: 415.80, GOOGL: 141.80, NVDA: 875.30, TSLA: 163.57, META: 505.75, AMZN: 178.25, 'BTC-USD': 83500
 };
 
+type YahooChartResponse = {
+  chart?: {
+    result?: Array<{
+      meta?: {
+        regularMarketPrice?: number;
+      };
+      indicators?: {
+        quote?: Array<{
+          close?: Array<number | null>;
+        }>;
+      };
+    }>;
+  };
+};
+
+function getYahooCloses(data: YahooChartResponse): number[] {
+  return data.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter(
+    (c): c is number => c !== null
+  ) || [];
+}
+
 const isMarketOpen = (): boolean => {
   const now = new Date();
   const hour = now.getUTCHours();
@@ -220,8 +241,8 @@ app.get("/api/models", async (req: Request, res: Response) => {
     try {
       const proxyRes = await fetch(`http://localhost:3000/api/yahoo/chart?symbol=${sym}&range=30d`);
       if (proxyRes.ok) {
-        const data = await proxyRes.json();
-        const closes = data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter((c: number) => c !== null) || [];
+        const data = await proxyRes.json() as YahooChartResponse;
+        const closes = getYahooCloses(data);
         const lastPrice = closes[closes.length - 1];
         // Calculate prediction accuracy based on price movement direction
         if (closes.length > 10) {
@@ -351,8 +372,8 @@ app.post("/predict", async (req: Request, res: Response) => {
   try {
     const proxyRes = await fetch(`http://localhost:3000/api/yahoo/chart?symbol=${sym}&range=1y`);
     if (proxyRes.ok) {
-      const data = await proxyRes.json();
-      closes = data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter((c: number) => c !== null) || [];
+      const data = await proxyRes.json() as YahooChartResponse;
+      closes = getYahooCloses(data);
       currentPrice = data?.chart?.result?.[0]?.meta?.regularMarketPrice || basePrice;
     }
   } catch (e) {
@@ -440,8 +461,8 @@ app.post("/sentiment", async (req: Request, res: Response) => {
   try {
     const proxyRes = await fetch(`http://localhost:3000/api/yahoo/chart?symbol=${sym}&range=3mo`);
     if (proxyRes.ok) {
-      const data = await proxyRes.json();
-      closes = data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter((c: number) => c !== null) || [];
+      const data = await proxyRes.json() as YahooChartResponse;
+      closes = getYahooCloses(data);
       currentPrice = data?.chart?.result?.[0]?.meta?.regularMarketPrice || FALLBACK_PRICES[sym] || 100;
     }
   } catch (e) {}
