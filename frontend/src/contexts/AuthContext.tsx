@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let isMounted = true;
 
-    supabase.auth.getSession().then(async ({ data }) => {
+    const sessionPromise = supabase.auth.getSession().then(async ({ data }) => {
       if (!isMounted) return;
       setSession(data.session);
       setUser(data.session?.user ?? null);
@@ -52,10 +52,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null);
       }
       setIsLoading(false);
-    }).catch((error) => {
-      console.error("Session check failed:", error);
+    });
+
+    sessionPromise.catch(() => {
       if (isMounted) setIsLoading(false);
     });
+
+    const timeoutId = setTimeout(() => {
+      if (isMounted) setIsLoading(false);
+    }, 5000);
 
     const {
       data: { subscription },
@@ -77,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       isMounted = false;
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, [isConfigured]);
