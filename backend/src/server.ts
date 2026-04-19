@@ -553,6 +553,13 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 // Start server
 const start = async () => {
   try {
+    console.log("Startup config:", {
+      hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+      hasSupabaseUrl: Boolean(process.env.SUPABASE_URL),
+      hasSupabaseServiceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      port,
+    });
+
     // Test database connection
     await prisma.$connect();
     console.log("✓ Database connected");
