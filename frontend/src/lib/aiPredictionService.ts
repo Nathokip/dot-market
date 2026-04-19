@@ -69,7 +69,7 @@ export interface ModelsResponse {
 class AIPredictionService {
   async predict(request: PredictionRequest): Promise<PredictionResponse> {
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/predict`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/predictions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request),
