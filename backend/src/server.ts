@@ -239,7 +239,7 @@ app.get("/api/models", async (req: Request, res: Response) => {
   
   for (const sym of symbols) {
     try {
-      const proxyRes = await fetch(`http://localhost:3000/api/yahoo/chart?symbol=${sym}&range=30d`);
+      const proxyRes = await fetch(`${process.env.BASE_URL || 'http://localhost:3000'}/api/yahoo/chart?symbol=${sym}&range=30d`);
       if (proxyRes.ok) {
         const data = await proxyRes.json() as YahooChartResponse;
         const closes = getYahooCloses(data);
@@ -370,7 +370,7 @@ app.post("/predict", async (req: Request, res: Response) => {
   
   // Try proxy endpoint first
   try {
-    const proxyRes = await fetch(`http://localhost:3000/api/yahoo/chart?symbol=${sym}&range=1y`);
+    const proxyRes = await fetch(`${process.env.BASE_URL || 'http://localhost:3000'}/api/yahoo/chart?symbol=${sym}&range=1y`);
     if (proxyRes.ok) {
       const data = await proxyRes.json() as YahooChartResponse;
       closes = getYahooCloses(data);
@@ -459,7 +459,7 @@ app.post("/sentiment", async (req: Request, res: Response) => {
   
   // Get real price data
   try {
-    const proxyRes = await fetch(`http://localhost:3000/api/yahoo/chart?symbol=${sym}&range=3mo`);
+    const proxyRes = await fetch(`${process.env.BASE_URL || 'http://localhost:3000'}/api/yahoo/chart?symbol=${sym}&range=3mo`);
     if (proxyRes.ok) {
       const data = await proxyRes.json() as YahooChartResponse;
       closes = getYahooCloses(data);
