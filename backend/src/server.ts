@@ -184,6 +184,26 @@ app.post("/api/predictions", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Symbol is required" });
   }
 
+  const aiEngineUrl = process.env.AI_ENGINE_URL;
+  
+  if (aiEngineUrl) {
+    try {
+      const response = await fetch(`${aiEngineUrl}/predict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol, model }),
+      });
+      
+      if (response.ok) {
+        const prediction = await response.json();
+        return res.json(prediction);
+      }
+    } catch (e) {
+      console.error('AI Engine error:', e);
+    }
+  }
+
+  // Fallback to random if AI engine not available
   const isCrypto = symbol.toUpperCase() === 'BTC-USD';
   const currentPrice = FALLBACK_PRICES[symbol.toUpperCase()] || 100;
   const priceChange = (Math.random() - 0.5) * 0.03;
@@ -207,14 +227,34 @@ app.post("/api/predictions", async (req: Request, res: Response) => {
 
 app.post("/api/sentiment", async (req: Request, res: Response) => {
   try {
-    const { text } = req.body;
+    const { text, symbol } = req.body;
+    
+    const aiEngineUrl = process.env.AI_ENGINE_URL;
+    
+    if (aiEngineUrl) {
+      try {
+        const response = await fetch(`${aiEngineUrl}/sentiment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text || symbol }),
+        });
+        
+        if (response.ok) {
+          const sentiment = await response.json();
+          return res.json(sentiment);
+        }
+      } catch (e) {
+        console.error('AI Engine sentiment error:', e);
+      }
+    }
     
     // Simple keyword-based sentiment
+    const inputText = text || symbol || '';
     const positive = ['up', 'bullish', 'growth', 'gain', 'profit', 'beat', 'surge', 'rally', 'high', 'positive'];
     const negative = ['down', 'bearish', 'loss', 'drop', 'fall', 'decline', 'miss', 'weak', 'low', 'negative'];
     
     let score = 0;
-    const lower = text.toLowerCase();
+    const lower = inputText.toLowerCase();
     
     positive.forEach(w => { if (lower.includes(w)) score += 0.1; });
     negative.forEach(w => { if (lower.includes(w)) score -= 0.1; });
@@ -232,7 +272,22 @@ app.post("/api/sentiment", async (req: Request, res: Response) => {
 });
 
 app.get("/api/models", async (req: Request, res: Response) => {
-  // Calculate real accuracy from historical predictions
+  const aiEngineUrl = process.env.AI_ENGINE_URL;
+  
+  // Try to get models from AI engine
+  if (aiEngineUrl) {
+    try {
+      const response = await fetch(`${aiEngineUrl}/models`);
+      if (response.ok) {
+        const models = await response.json();
+        return res.json(models);
+      }
+    } catch (e) {
+      console.error('AI Engine models error:', e);
+    }
+  }
+  
+  // Calculate real accuracy from historical predictions as fallback
   const symbols = ['AAPL', 'MSFT', 'GOOGL', 'NVDA', 'TSLA', 'META', 'AMZN'];
   let totalAccuracy = 0;
   let predictionsMade = 0;
@@ -244,7 +299,6 @@ app.get("/api/models", async (req: Request, res: Response) => {
         const data = await proxyRes.json() as YahooChartResponse;
         const closes = getYahooCloses(data);
         const lastPrice = closes[closes.length - 1];
-        // Calculate prediction accuracy based on price movement direction
         if (closes.length > 10) {
           const recentChange = (closes[closes.length-1] - closes[closes.length-10]) / closes[closes.length-10];
           const predictedCorrect = (recentChange > 0 && FALLBACK_PRICES[sym] > closes[closes.length-10]) || (recentChange < 0 && FALLBACK_PRICES[sym] < closes[closes.length-10]);
@@ -257,7 +311,6 @@ app.get("/api/models", async (req: Request, res: Response) => {
   
   const accuracy = predictionsMade > 0 ? (totalAccuracy / predictionsMade * 100) : 75;
   
-  // Generate feature importance based on what's used in predictions
   const featureImportance = [
     { name: 'SMA 20/50', value: 28 },
     { name: 'RSI', value: 22 },
@@ -267,7 +320,6 @@ app.get("/api/models", async (req: Request, res: Response) => {
     { name: 'Volume', value: 5 }
   ];
   
-  // Generate accuracy history (simulated from real data)
   const accuracyHistory = Array.from({ length: 30 }, (_, i) => {
     const baseAcc = 75 + Math.random() * 15;
     return { day: `Day ${i + 1}`, accuracy: Number(baseAcc.toFixed(1)) };
