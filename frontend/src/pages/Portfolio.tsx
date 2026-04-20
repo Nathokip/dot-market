@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { aiPredictionService } from "@/lib/aiPredictionService";
-import { fetchBatchQuotes } from "@/lib/marketDataService";
+import { fetchBatchQuotes, fetchStockQuote } from "@/lib/marketDataService";
 import {
   createPortfolioTrade,
   getOrCreatePortfolio,
@@ -159,8 +159,7 @@ const Portfolio = () => {
     setForm((current) => ({ ...current, isFetchingPrice: true }));
     
     try {
-      const { fetchQuote } = await import("@/lib/marketDataService");
-      const quote = await fetchQuote(symbol.toUpperCase());
+      const quote = await fetchStockQuote(symbol.toUpperCase());
       
       if (quote?.price) {
         setForm((current) => ({ ...current, price: quote.price.toFixed(2), isFetchingPrice: false }));
