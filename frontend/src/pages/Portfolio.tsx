@@ -18,7 +18,7 @@ import {
   DollarSign,
   TrendingUp,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "@/components/ui/sonner";
 
 interface HoldingRow {
@@ -37,6 +37,7 @@ interface TradeFormState {
   quantity: string;
   side: "BUY" | "SELL";
   symbol: string;
+  isFetchingPrice: boolean;
 }
 
 const defaultTradeForm: TradeFormState = {
@@ -44,6 +45,7 @@ const defaultTradeForm: TradeFormState = {
   quantity: "",
   side: "BUY",
   symbol: "AAPL",
+  isFetchingPrice: false,
 };
 
 function formatCurrency(value: number) {
@@ -145,7 +147,29 @@ const Portfolio = () => {
     } finally {
       setIsLoading(false);
     }
-  }
+
+  const fetchCurrentPrice = useCallback(async (symbol: string) => {
+    if (!symbol || symbol.length < 2) return;
+    
+    setForm((current) => ({ ...current, isFetchingPrice: true }));
+    
+    try {
+      const { fetchQuote } = await import("@/lib/marketDataService");
+      const quote = await fetchQuote(symbol.toUpperCase());
+      
+      if (quote?.price) {
+        setForm((current) => ({ ...current, price: quote.price.toFixed(2), isFetchingPrice: false }));
+        toast.success(`Price: $${quote.price.toFixed(2)}`);
+      } else {
+        setForm((current) => ({ ...current, isFetchingPrice: false }));
+        toast.error("Could not fetch price. Enter manually.");
+      }
+    } catch (e) {
+      setForm((current) => ({ ...current, isFetchingPrice: false }));
+      console.error("Failed to fetch price:", e);
+      toast.error("Could not fetch price. Enter manually.");
+    }
+  }, []);
 
   useEffect(() => {
     loadPortfolio();
@@ -320,12 +344,24 @@ const Portfolio = () => {
             <form onSubmit={handleTradeSubmit} className="space-y-4">
               <div>
                 <label className="mb-1 block text-sm text-muted-foreground">Symbol</label>
-                <Input
-                  value={form.symbol}
-                  onChange={(event) => setForm((current) => ({ ...current, symbol: event.target.value.toUpperCase() }))}
-                  placeholder="AAPL"
-                  required
-                />
+                <div className="flex gap-2">
+                  <Input
+                    value={form.symbol}
+                    onChange={(event) => setForm((current) => ({ ...current, symbol: event.target.value.toUpperCase() }))}
+                    placeholder="AAPL"
+                    className="flex-1"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fetchCurrentPrice(form.symbol)}
+                    disabled={form.isFetchingPrice || !form.symbol}
+                    className="shrink-0"
+                  >
+                    {form.isFetchingPrice ? "..." : "Fetch"}
+                  </Button>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
