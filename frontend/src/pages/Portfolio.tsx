@@ -18,7 +18,7 @@ import {
   DollarSign,
   TrendingUp,
 } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "@/components/ui/sonner";
 
 interface HoldingRow {
@@ -37,7 +37,7 @@ interface TradeFormState {
   quantity: string;
   side: "BUY" | "SELL";
   symbol: string;
-  isFetchingPrice: boolean;
+  isFetchingPrice?: boolean;
 }
 
 const defaultTradeForm: TradeFormState = {
@@ -147,8 +147,13 @@ const Portfolio = () => {
     } finally {
       setIsLoading(false);
     }
+  }
 
-  const fetchCurrentPrice = useCallback(async (symbol: string) => {
+  useEffect(() => {
+    loadPortfolio();
+  }, [user?.id]);
+
+  async function fetchCurrentPrice(symbol: string) {
     if (!symbol || symbol.length < 2) return;
     
     setForm((current) => ({ ...current, isFetchingPrice: true }));
@@ -169,11 +174,7 @@ const Portfolio = () => {
       console.error("Failed to fetch price:", e);
       toast.error("Could not fetch price. Enter manually.");
     }
-  }, []);
-
-  useEffect(() => {
-    loadPortfolio();
-  }, [user?.id]);
+  }
 
   async function handleTradeSubmit(event: React.FormEvent) {
     event.preventDefault();
